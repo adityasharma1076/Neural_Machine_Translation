@@ -119,6 +119,7 @@ class VocabEntry(object):
         @param sents (list[list[str]]): sentence(s) in words
         @return word_ids (list[list[list[int]]]): sentence(s) in indices
         """
+
         ### YOUR CODE HERE for part 1e
         ### TODO: 
         ###     This method should convert characters in the input sentences into their 
@@ -127,8 +128,17 @@ class VocabEntry(object):
         ###
         ###     You must prepend each word with the `start_of_word` character and append 
         ###     with the `end_of_word` character. 
-
-
+        word_ids = []
+        for sentence in sents:
+            list_words = []
+            for word in sentence:
+                list_char_ind = [self.start_of_word]
+                for char in word:
+                    list_char_ind.append(self.char2id[char])
+                list_char_ind.append(self.end_of_word)
+                list_words.append(list_char_ind)
+            word_ids.append(list_words)
+        return word_ids
         ### END YOUR CODE
 
     def words2indices(self, sents):
@@ -158,8 +168,11 @@ class VocabEntry(object):
         ### TODO: 
         ###     Connect `words2charindices()` and `pad_sents_char()` which you've defined in 
         ###     previous parts
-        
+        word_ids = words2charindices(sents)
+        padded_sents = pad_sents_char(word_ids,self.char2id['<pad>'])
+        sents_tensor = torch.tensor(padded_sents,dtype=torch.long,device=device)
 
+        return sents_tensor.transpose(0,1)
         ### END YOUR CODE
 
     def to_input_tensor(self, sents: List[List[str]], device: torch.device) -> torch.Tensor:
@@ -174,7 +187,7 @@ class VocabEntry(object):
         word_ids = self.words2indices(sents)
         sents_t = pad_sents(word_ids, self['<pad>'])
         sents_var = torch.tensor(sents_t, dtype=torch.long, device=device)
-        return torch.t(sents_var)
+        return torch.t(sents_var,0,1)
 
     @staticmethod
     def from_corpus(corpus, size, freq_cutoff=2):

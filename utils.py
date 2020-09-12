@@ -29,7 +29,7 @@ def pad_sents_char(sents, char_pad_token):
     """
     # Words longer than 21 characters should be truncated
     max_word_length = 21
-
+    
     ### YOUR CODE HERE for part 1f
     ### TODO:
     ###     Perform necessary padding to the sentences in the batch similar to the pad_sents()
@@ -40,10 +40,22 @@ def pad_sents_char(sents, char_pad_token):
     ###
     ###     You should NOT use the method `pad_sents()` below because of the way it handles
     ###     padding and unknown words.
+    length=[len(x) for x in sents]
+    max_sentence_length=max(length)
 
-
+    sents_padded = []
+    for idx,sentence in enumerate(sents):
+        cur_sentence=[]
+        for word in sentence:
+            if len(word)>21:
+                cur_sentence.append(word[:21])
+            else:
+                padding_len = max_word_length - len(word)
+                
+                cur_sentence.append(word + [char_pad_token]*(padding_len))
+        cur_sentence.extend([[0]*max_word_length]*(max_sentence_length-length[idx]))
+        sents_padded.append(cur_sentence)
     ### END YOUR CODE
-
     return sents_padded
 
 
@@ -60,6 +72,13 @@ def pad_sents(sents, pad_token):
     sents_padded = []
 
     ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
+    length=[len(x) for x in sents]
+    max_length=max(length)
+    sents_padded=[]
+    for x in range(len(sents)):
+        sents_padded.append(sents[x])
+        sents_padded[x].extend([pad_token]*(max_length-length[x]))
+                   
 
 
     ### END YOUR CODE FROM ASSIGNMENT 4
