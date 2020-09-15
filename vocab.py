@@ -168,7 +168,7 @@ class VocabEntry(object):
         ### TODO: 
         ###     Connect `words2charindices()` and `pad_sents_char()` which you've defined in 
         ###     previous parts
-        word_ids = words2charindices(sents)
+        word_ids = self.words2charindices(sents)
         padded_sents = pad_sents_char(word_ids,self.char2id['<pad>'])
         sents_tensor = torch.tensor(padded_sents,dtype=torch.long,device=device)
 
@@ -187,7 +187,7 @@ class VocabEntry(object):
         word_ids = self.words2indices(sents)
         sents_t = pad_sents(word_ids, self['<pad>'])
         sents_var = torch.tensor(sents_t, dtype=torch.long, device=device)
-        return torch.t(sents_var,0,1)
+        return sents_var.transpose(0,1)
 
     @staticmethod
     def from_corpus(corpus, size, freq_cutoff=2):

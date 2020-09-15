@@ -37,7 +37,7 @@ class ModelEmbeddings(nn.Module):
         # pad_token_idx = vocab.src['<pad>']
         # self.embeddings = nn.Embedding(len(vocab.src), embed_size, padding_idx=pad_token_idx)
         ## End A4 code
-
+        self.embed_size = embed_size
         ### YOUR CODE HERE for part 1j
         self.max_word_length=21
         self.k_size=5
