@@ -9,7 +9,7 @@ Sahil Chopra <schopra8@stanford.edu>
 Anand Dhoot <anandd@stanford.edu>
 Michael Hahn <mhahn2@stanford.edu>
 """
-
+import torch
 import torch.nn as nn
 
 # Do not change these imports; your module names should be
@@ -17,10 +17,9 @@ import torch.nn as nn
 #   `Highway` in the file `highway.py`
 # Uncomment the following two imports once you're ready to run part 1(j)
 
-# from cnn import CNN
-# from highway import Highway
-
-# End "do not change" 
+from cnn import CNN
+from highway import Highway
+from vocab import Vocab, VocabEntry# End "do not change" 
 
 class ModelEmbeddings(nn.Module): 
     """
@@ -40,8 +39,16 @@ class ModelEmbeddings(nn.Module):
         ## End A4 code
 
         ### YOUR CODE HERE for part 1j
-
-
+        self.max_word_length=21
+        self.k_size=5
+        self.output_embed_size = embed_size
+        char_embed_size = 50
+        
+        pad_token_idx = vocab.char2id['<pad>']
+        self.char_embeddings = nn.Embedding(len(vocab.char2id),char_embed_size,pad_token_idx)
+        self.cnn=CNN(char_embed_size,self.output_embed_size,self.k_size,self.max_word_length)
+        self.highway = Highway(self.output_embed_size)
+        self.droput= nn.Dropout(0.3)
         ### END YOUR CODE
 
     def forward(self, input):
@@ -59,7 +66,25 @@ class ModelEmbeddings(nn.Module):
         ## End A4 code
 
         ### YOUR CODE HERE for part 1j
+        batch_embeddings = []
 
-
+        for padded_sentence in input:
+            char_embeddings = self.char_embeddings(padded_sentence)
+            embeddings = torch.transpose(char_embeddings,dim0=1,dim1=2)
+            cnn_output = self.cnn(embeddings)
+            highway_output = self.highway(cnn_output)
+            dropout_output = self.droput(highway_output)
+            batch_embeddings.append(dropout_output)
+        batch_embeddings = torch.stack(batch_embeddings)
+        return batch_embeddings
         ### END YOUR CODE
-
+# ## Test
+# if __name__=="__main__": 
+#     vocab = Vocab.load('vocab.json')
+    
+#     sentence_length = 10
+#     max_word_length = 21
+#     BATCH_SIZE = 15
+#     model = ModelEmbeddings(embed_size=256,vocab=vocab.src)
+#     inpt = torch.zeros(sentence_length, BATCH_SIZE, max_word_length, dtype=torch.long)
+#     model.forward(inpt)

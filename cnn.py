@@ -14,20 +14,20 @@ class CNN(nn.Module):
         Relu_out = self.Relu(conv_out)
         pool_out = self.max_pool(Relu_out)
 
-        return pool_out
+        return pool_out.squeeze(2)
+##### TEST
+# if __name__ =='__main__':
+#     embed_size = 16
+#     kernel_size = 5
+#     max_word_length = 21
+#     batch_size = 2 
+#     features = 16
+#     model = CNN(embed_size,features,kernel_size,max_word_length)
 
-if __name__ =='__main__':
-    embed_size = 16
-    kernel_size = 5
-    max_word_length = 21
-    batch_size = 2 
-    features = 16
-    model = CNN(embed_size,features,kernel_size,max_word_length)
+#     t3 = torch.randn(batch_size, embed_size,max_word_length)
 
-    t3 = torch.randn(batch_size, embed_size,max_word_length)
-
-    output = model(t3)
-    print(output.shape)
-    output = output.squeeze(2)
-    print(output)
+#     output = model(t3)
+#     print(output.shape)
+#     output = output.squeeze(2)
+#     print(output)
 
