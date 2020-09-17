@@ -117,12 +117,14 @@ class NMT(nn.Module):
         scores = target_gold_words_log_prob.sum() # mhahn2 Small modification from A4 code.
 
 
-
+        # print(target_padded_chars.view(-1, target_padded_chars.shape[-1]))#,target_padded_chars.shape[-1])
         if self.charDecoder is not None:
             max_word_len = target_padded_chars.shape[-1]
 
-            target_words = target_padded[1:].contiguous().view(-1)
-            target_chars = target_padded_chars[1:].view(-1, max_word_len)
+            # target_words = target_padded[1:].contiguous().view(-1)
+            # target_chars = target_padded_chars[1:].view(-1, max_word_len)
+            target_words = target_padded[1:].reshape(-1)
+            target_chars = target_padded_chars[1:].reshape(-1,max_word_len)
             target_outputs = combined_outputs.view(-1, 256)
 
             target_chars_oov = target_chars #torch.index_select(target_chars, dim=0, index=oovIndices)

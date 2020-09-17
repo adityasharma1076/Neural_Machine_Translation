@@ -101,10 +101,11 @@ class CharDecoder(nn.Module):
         dec_hidden = initialStates
         batch_size = dec_hidden[0].shape[1]
         current_char=torch.tensor([[self.target_vocab.start_of_word]*batch_size],device=device)
-        for t in range(max_length-1):
+        for t in range(max_length):
             scores,dec_hidden = self.forward(current_char,dec_hidden)
             ## scores -->shape (length, batch, self.vocab_size)
-            output_indexes.append(torch.argmax(scores, dim=-1))
+            current_char = torch.argmax(scores, dim=-1)
+            output_indexes.append(current_char)
         
         output_indexes = torch.transpose(torch.cat(output_indexes),0,1).tolist()
         end_of_word_idx =  self.target_vocab.end_of_word
