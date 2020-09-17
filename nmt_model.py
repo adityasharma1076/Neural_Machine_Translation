@@ -103,7 +103,7 @@ class NMT(nn.Module):
         target_padded_chars = self.vocab.tgt.to_input_tensor_char(target, device=self.device)   # Tensor: (tgt_len, b)
         
         enc_hiddens, dec_init_state = self.encode(source_padded_chars, source_lengths)
-        enc_masks = self.generate_sent_masks(source_padded_chars,source_lengths)
+        enc_masks = self.generate_sent_masks(enc_hiddens,source_lengths)
         combined_outputs = self.decode(enc_hiddens, enc_masks, dec_init_state, target_padded_chars)
         ### END YOUR CODE
 
@@ -250,9 +250,8 @@ class NMT(nn.Module):
         
         # Set e_t to -inf where enc_masks has 1
         if enc_masks is not None:
-            enc_masks=enc_masks.transpose(0,1)
+            # enc_masks=enc_masks.transpose(0,1)
             e_t.data.masked_fill_(enc_masks.bool(), -float('inf'))
-
         ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
         alpha_t=F.softmax(e_t, dim= 1)
         a_t=torch.bmm(alpha_t.unsqueeze(1),enc_hiddens).squeeze(1)
@@ -278,8 +277,10 @@ class NMT(nn.Module):
                                     where src_len = max source length, h = hidden size.
         """
         enc_masks = torch.zeros(enc_hiddens.size(0), enc_hiddens.size(1), dtype=torch.float)
+
         for e_id, src_len in enumerate(source_lengths):
             enc_masks[e_id, src_len:] = 1
+        
         return enc_masks.to(self.device)
 
 
