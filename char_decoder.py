@@ -11,7 +11,6 @@ import torch.nn as nn
 class CharDecoder(nn.Module):
     def __init__(self, hidden_size, char_embedding_size=50, target_vocab=None):
         """ Init Character Decoder.
-
         @param hidden_size (int): Hidden size of the decoder LSTM
         @param char_embedding_size (int): dimensionality of character embeddings
         @param target_vocab (VocabEntry): vocabulary for the target language. See vocab.py for documentation.
@@ -27,11 +26,17 @@ class CharDecoder(nn.Module):
         ### Hint: - Use target_vocab.char2id to access the character vocabulary for the target language.
         ###       - Set the padding_idx argument of the embedding matrix.
         ###       - Create a new Embedding layer. Do not reuse embeddings created in Part 1 of this assignment.
-        
+        super(CharDecoder,self).__init__()
+        self.target_vocab = target_vocab
+        self.char_embedding_size = char_embedding_size
+        self.hidden_size = hidden_size
+        self.padding_idx = self.target_vocab.char2id['<pad>']
 
-        ### END YOUR CODE
+        self.decoderCharEmb = nn.Embedding(num_embeddings=len(self.target_vocab.char2id),embedding_dim = char_embedding_size,padding_idx=self.padding_idx)
 
-
+        self.charDecoder = nn.LSTM(input_size=char_embedding_size,hidden_size=hidden_size,bias=True)
+        self.char_output_projection = nn.Linear(in_features=hidden_size,out_features=len(self.target_vocab.char2id),bias=True)
+                ### END YOUR CODE
     
     def forward(self, input, dec_hidden=None):
         """ Forward pass of character decoder.
@@ -44,8 +49,14 @@ class CharDecoder(nn.Module):
         """
         ### YOUR CODE HERE for part 2b
         ### TODO - Implement the forward pass of the character decoder.
-        
-        
+        char_embeddings = self.decoderCharEmb(input)
+        ### (length,batch,char_embedding_size)
+
+        ## LSTM input(input, (h_0, c_0)) --> input of shape (seq_len, batch, input_size)--->h_0 of shape (num_layers * num_directions, batch, hidden_size)
+        decoder_output, dec_hidden = self.charDecoder(char_embeddings,dec_hidden)
+        scores = self.char_output_projection(decoder_output)
+
+        return scores,dec_hidden
         ### END YOUR CODE 
 
 
@@ -62,8 +73,11 @@ class CharDecoder(nn.Module):
         ###
         ### Hint: - Make sure padding characters do not contribute to the cross-entropy loss.
         ###       - char_sequence corresponds to the sequence x_1 ... x_{n+1} from the handout (e.g., <START>,m,u,s,i,c,<END>).
-
-
+        scores,dec_hidden = self.forward(char_sequence[:-1],dec_hidden)
+        ce_loss = nn.CrossEntropyLoss(ignore_index=self.padding_idx,reduction='sum')
+        # print(scores.permute(1,2,0).shape,torch.transpose(char_sequence[1:],1,0).shape)
+        total_loss=ce_loss(scores.permute(1,2,0),torch.transpose(char_sequence[1:],1,0))
+        return total_loss
         ### END YOUR CODE
 
     def decode_greedy(self, initialStates, device, max_length=21):
@@ -83,7 +97,26 @@ class CharDecoder(nn.Module):
         ###      - Use torch.tensor(..., device=device) to turn a list of character indices into a tensor.
         ###      - We use curly brackets as start-of-word and end-of-word characters. That is, use the character '{' for <START> and '}' for <END>.
         ###        Their indices are self.target_vocab.start_of_word and self.target_vocab.end_of_word, respectively.
+        output_indexes = []
+        dec_hidden = initialStates
+        batch_size = dec_hidden[0].shape[1]
+        current_char=torch.tensor([[self.target_vocab.start_of_word]*batch_size],device=device)
+        for t in range(max_length-1):
+            scores,dec_hidden = self.forward(current_char,dec_hidden)
+            ## scores -->shape (length, batch, self.vocab_size)
+            output_indexes.append(torch.argmax(scores, dim=-1))
         
-        
+        output_indexes = torch.transpose(torch.cat(output_indexes),0,1).tolist()
+        end_of_word_idx =  self.target_vocab.end_of_word
+        output_words=[]
+        for row in output_indexes:
+            word=''
+            for idx in row:
+                if idx==end_of_word_idx:
+                    break
+                word+=self.target_vocab.id2char[idx]
+            output_words.append(word)
+        return output_words
+
         ### END YOUR CODE
 

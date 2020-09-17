@@ -139,7 +139,7 @@ def train(args: Dict):
 
     vocab_mask = torch.ones(len(vocab.tgt))
     vocab_mask[vocab.tgt['<pad>']] = 0
-
+    print(vocab.tgt['<pad>'])
     # device = torch.device("cuda:0" if args['--cuda'] else "cpu")
     device = torch.device("cuda")
     print('use device: %s' % device, file=sys.stderr)

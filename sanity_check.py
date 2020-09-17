@@ -193,7 +193,6 @@ def main():
     np.random.seed(seed * 13 // 7)
 
     vocab = Vocab.load('./sanity_check_en_es_data/vocab_sanity_check.json') 
-    print(HIDDEN_SIZE)
     # Create NMT Model
     model = NMT(
         embed_size=EMBED_SIZE,
